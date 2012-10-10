@@ -102,9 +102,9 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <None Include="CodeFirstCSharp.Views1.tt">
+    <None Include="Mocks.g.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>CodeFirstCSharp.Views1.cs</LastGenOutput>
+      <LastGenOutput>Mocks.g.cs</LastGenOutput>
     </None>
     <None Include="seesharp.moqingbirt.GenerateMockClassesTask.targets">
       <SubType>Designer</SubType>
@@ -112,10 +112,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
-    <Compile Include="CodeFirstCSharp.Views1.cs">
+    <Compile Include="Mocks.g.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
-      <DependentUpon>CodeFirstCSharp.Views1.tt</DependentUpon>
+      <DependentUpon>Mocks.g.tt</DependentUpon>
     </Compile>
     <Compile Include="Mock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
