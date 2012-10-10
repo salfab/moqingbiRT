@@ -1,0 +1,104 @@
+﻿<#
+/*
+Copyright (c) Pawel Kadluczka. All rights reserved.
+
+AS IS, NO WARRANTY, USE ON YOUR OWN RISK
+
+T4 template for creating pre-generated views for Entity Framework Code First application
+
+Usage: 
+1. Add this template to your project
+2. Rename this template so that its name contains the name of your DbContext derived class (e.g. MyContext.Views.tt)
+3. Right-click the template file in the Solution Explorer and select "Run Custom Tool"
+4. If you have more than one DbContext derived class in your project you need to add a separate template for each
+DbContext derived class you want to create pre-generated views for. 
+*/
+#>
+<#@ template debug="true" hostspecific="true" language="C#" #>
+<#@ output extension=".cs" #>
+<#@ assembly name="$(SolutionDir)seesharp.moqingbirt.TestBench\bin\Debug\seesharp.moqingbirt.TestBench.dll"#>
+<#@ import namespace="System.Reflection" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Xml" #>
+<#@ import namespace="System.Xml.Linq" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="System.Data.Entity" #>
+<#@ assembly name="System.Data.Entity.Design" #>
+<#@ assembly name="System.Xml" #>
+<#@ assembly name="System.Xml.Linq" #>
+<#@ assembly name="EnvDTE" #>
+<#@ import namespace="EnvDTE" #>		
+<#	 
+		var v = System.Reflection.Assembly.LoadFile(@"D:\sources\Moqingbirt\seesharp.moqingbirt\seesharp.moqingbirt.TestBench\bin\Debug\seesharp.moqingbirt.TestBench.dll");
+		foreach(var type in v.ExportedTypes.Where(o => o.GetTypeInfo().IsInterface))
+		{
+			WriteLine("namespace " + type.Namespace +".Mocks\r\n{");	
+			WriteLine("    using System;");	
+			WriteLine("    using System.Linq;");	
+			WriteLine(string.Empty);
+			WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", type.Name.TrimStart('I'), type.Name));
+			WriteLine("    {");	
+			// within the body of the class.
+			foreach(var method in type.GetRuntimeMethods().Where(o=>!o.IsSpecialName))
+			{
+				string typeName;
+				if(method.ReturnType == typeof(void))
+				{
+					typeName = "void";
+				}
+				else
+				{
+					typeName = method.ReturnType.FullName;					
+				}
+				Write(string.Format("        public {0} {1}(",  typeName , method.Name));	
+				foreach(var param in method.GetParameters())
+					{
+						Write(string.Format("{0} {1}", param.ParameterType.FullName, param.Name));	
+					
+					}
+					WriteLine(")");
+					 
+				WriteLine("        {");	
+
+
+				// return value of the method 
+				if (method.ReturnType != typeof(void))
+				{
+					WriteLine("            return default("+ method.ReturnType.FullName +");");	
+				}
+				WriteLine("        }");					
+				WriteLine(string.Empty);					
+
+
+			}
+						
+			foreach(var property in type.GetRuntimeProperties())
+			{
+				WriteLine("        public " + property.PropertyType.FullName+ " " + property.Name);	
+				WriteLine("        { ");
+				
+				// TODO : Record the calls
+				WriteLine("            get");					
+				WriteLine("            {");					
+				WriteLine("                this.PropertyGetCalls.Add(\""+ property.Name +"\");");				
+				WriteLine("                return ("+property.PropertyType.FullName+")this.Setups.Single(o => o.Item1 == \"" + property.Name + "\").Item3;");					
+				WriteLine("            }");					
+								
+				
+				// TODO : Record the calls
+				WriteLine("            set");					
+				WriteLine("            {");										
+				WriteLine("                this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
+				WriteLine("            }");				
+				
+				WriteLine("        }");	
+
+			}
+
+			WriteLine("    }");	
+			WriteLine("}");	
+			WriteLine(string.Empty);
+
+		}		
+#>

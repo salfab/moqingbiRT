@@ -1,0 +1,6 @@
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<UsingTask TaskName="GenerateMockClassesTask" AssemblyFile="..\seesharp.moqingbirt.GenerateMockClassesTask\bin\Debug\seesharp.moqingbirt.GenerateMockClassesTask.dll" />
+  <Target Name="BeforeBuild">
+    <GenerateMockClassesTask />
+  </Target>
+</Project>
