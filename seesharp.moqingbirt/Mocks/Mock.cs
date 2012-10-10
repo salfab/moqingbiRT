@@ -69,15 +69,58 @@ namespace seesharp.moqingbirt
         {
             return new Setup<T>((IMock)this.Object, expression);
         }
-     
-        public void VerifyGet(Func<object, object> func, int i)
+
+        public void VerifyGet<TReturn>(Expression<Func<T, TReturn>> expression, int expectedTimesCalled)
         {
-            throw new NotImplementedException();
+            var memberExpression = expression.Body as MemberExpression;
+            if (memberExpression == null)
+            {
+                throw new ArgumentException("passed expression is not a property", "expression");
+            }
+
+            string propertyName = memberExpression.Member.Name;
+            var callsToGetter = this.mockImplementation.PropertyGetCalls.Where(o => o == propertyName);
+            int actualCallsCount = callsToGetter.Count();
+
+            bool isMatching = actualCallsCount == expectedTimesCalled;
+            if (!isMatching)
+            {
+                throw new Exception(propertyName + " getter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
+            }
         }
 
-        public void VerifySet(Func<object, object> func, int i)
+        public void VerifySet<TResult>(Expression<Func<T, TResult>> expression, int expectedTimesCalled)
         {
-            throw new NotImplementedException();
-        }      
+            var memberExpression = expression.Body as MemberExpression;
+            if (memberExpression == null)
+            {
+                throw new ArgumentException("passed expression is not a property", "expression");
+            }
+
+            string propertyName = memberExpression.Member.Name;
+
+            var c = Expression.Lambda(expression).Compile();
+            object specifiedValue = c.DynamicInvoke();
+
+
+            var callsToSetter = this.mockImplementation.PropertySetCalls.Where(o => o.Item1 == propertyName && o.Item2 == specifiedValue);
+            int actualCallsCount = callsToSetter.Count();
+
+            bool isMatching = actualCallsCount == expectedTimesCalled;
+            if (!isMatching)
+            {
+                throw new Exception(propertyName + " setter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
+            }
+        }
+
+        //public void VerifySet(Action<T> expression, int expectedCallsCount)
+        //{
+        //    VerifySet(this, expression, expectedCallsCount);
+        //}
+
+        //public void VerifySet(Mock<T> mock, Action<T> expression, int expectedCallsCount)
+        //{
+            
+        //}
     }
 }

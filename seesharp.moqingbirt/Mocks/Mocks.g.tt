@@ -46,7 +46,6 @@ DbContext derived class you want to create pre-generated views for.
 			WriteLine(string.Empty);
 			WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", type.Name.TrimStart('I'), type.Name));
 			WriteLine("    {");	
-			// within the body of the class.
 			foreach(var method in type.GetRuntimeMethods().Where(o=>!o.IsSpecialName))
 			{
 				string typeName;
@@ -59,14 +58,33 @@ DbContext derived class you want to create pre-generated views for.
 					typeName = method.ReturnType.FullName;					
 				}
 				Write(string.Format("        public {0} {1}(",  typeName , method.Name));	
-				foreach(var param in method.GetParameters())
-					{
-						Write(string.Format("{0} {1}", param.ParameterType.FullName, param.Name));	
+				var parameters = method.GetParameters();
+				foreach(var param in parameters)
+				{
+					Write(string.Format("{0} {1}", param.ParameterType.FullName, param.Name));	
 					
-					}
-					WriteLine(")");
+				}
+				WriteLine(")");
 					 
 				WriteLine("        {");	
+				Write("            var callRecord = new Tuple<string, object[]>( \"" + method.Name + "\", new object[] { ");
+				if(parameters.Count() == 0)
+				{
+					Write("null");	
+				}
+				else
+				{
+					Write(parameters[0].Name);	
+					foreach(var param in parameters.Skip(1))
+					{					
+						Write(string.Format(", {0}", param.Name));	
+					
+					}
+				}
+				WriteLine(" });");	
+				WriteLine("            this.Calls.Add(callRecord);");	
+				// within the body of the class.
+
 
 
 				// return value of the method 

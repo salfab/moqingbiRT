@@ -24,11 +24,15 @@ namespace Specs
             mock.Setup(o => o.ReturnAnInteger()).Returns(1);
             mock.Setup(o => o.SetAnInteger(1.0));
 
+            mock.Object.SetAnInteger(1.0);
+
             mock.Verify(o => o.SetAnInteger(1.0), 1);
             Assert.IsFalse(mock.Object.IsAvailable);
 
-            //mock.VerifyGet(o => o.IsAvailable, 2);
-            //mock.VerifySet(o => o.IsAvailable, 0);
+            mock.VerifyGet(o => o.IsAvailable, 2);
+            mock.VerifySet(o => o.IsAvailable, 0);
+            //mock.VerifySet(o => o.IsAvailable = false, 0);
+            //mock.VerifySet(o => o.IsAvailable = false, 1);
         }
     }
 }
