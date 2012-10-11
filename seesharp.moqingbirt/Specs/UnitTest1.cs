@@ -32,10 +32,10 @@ namespace Specs
             Assert.IsFalse(mock.Object.IsAvailable);
 
             mock.VerifyGet(o => o.IsAvailable, 2);
-            mock.VerifySet(o => o.IsAvailable = false, 0);
+            mock.VerifySet(o => o.IsAvailable = false, Times.Never());
             mock.Object.IsAvailable = false;
             mock.Object.IsAvailable = true;
-            mock.VerifySet(o => o.IsAvailable = false, 1);
+            mock.VerifySet(o => o.IsAvailable = false, Times.Once());
             mock.VerifySet(o => o.IsAvailable = false, Times.AtLeast(0));
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
         }

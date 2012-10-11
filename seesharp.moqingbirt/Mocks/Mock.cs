@@ -115,31 +115,31 @@ namespace seesharp.moqingbirt
         //    }
         //}
 
-        public void VerifySet(Action<T> expression, int expectedCallsCount)
-        {
-            this.mockImplementation.StartVerifySet(this.Object, expression);           
+        //public void VerifySet(Action<T> expression, int expectedCallsCount)
+        //{
+        //    this.mockImplementation.StartVerifySet(this.Object, expression);           
 
-            var verificationDetail = this.mockImplementation.StopVerifySet(this.Object, expression);
+        //    var verificationDetail = this.mockImplementation.StopVerifySet(this.Object, expression);
 
-            int actualCallsCount = verificationDetail.Item2;
-            bool isMatching = actualCallsCount == expectedCallsCount;
-            if (!isMatching)
-            {
-                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedCallsCount);
-            }
-        }
+        //    int actualCallsCount = verificationDetail.Item2;
+        //    bool isMatching = actualCallsCount == expectedCallsCount;
+        //    if (!isMatching)
+        //    {
+        //        throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedCallsCount);
+        //    }
+        //}
 
-        public void VerifySet(Action<T> expression, Func<int, bool> expectedCallsCount)
+        public void VerifySet(Action<T> expression, Times expectedTimesCalled)
         {
             this.mockImplementation.StartVerifySet(this.Object, expression);
 
             var verificationDetail = this.mockImplementation.StopVerifySet(this.Object, expression);
 
             int actualCallsCount = verificationDetail.Item2;
-            bool isMatching = expectedCallsCount(actualCallsCount);
+            bool isMatching = expectedTimesCalled.MatchTimes(actualCallsCount);
             if (!isMatching)
             {
-                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedCallsCount);
+                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
             }
         }
     }

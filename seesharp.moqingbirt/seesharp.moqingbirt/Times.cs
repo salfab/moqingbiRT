@@ -4,14 +4,36 @@ namespace seesharp.moqingbirt
 
     public class Times
     {
-        public static Func<int, bool> AtLeast(int timesCalled)
+        private Func<int, bool> timesComparer;
+
+        private Times(Func<int, bool> timesComparer)
         {
-            return comparison => comparison >= timesCalled;
+            this.timesComparer = timesComparer;
         }
 
-        public static Func<int, bool> Exactly(int timesCalled)
+        public static Times AtLeast(int timesCalled)
         {
-            return comparison => comparison == timesCalled;
+            return new Times(comparison => comparison >= timesCalled);
+        }
+
+        public static Times Exactly(int timesCalled)
+        {
+            return new Times(comparison => comparison == timesCalled);            
+        }
+
+        public bool MatchTimes(int actualCallsCount)
+        {
+            return timesComparer(actualCallsCount);
+        }
+
+        public static Times Once()
+        {
+            return Times.Exactly(1);
+        }
+
+        public static Times Never()
+        {
+            return Times.Exactly(0);
         }
     }
 }
