@@ -18,5 +18,10 @@ namespace seesharp.moqingbirt
         /// Item 3 : configured returned value.
         /// </summary>
         List<Tuple<string, object[], object>> Setups { get; }
+
+        void StartVerifySet<T>(T mockedOject, Action<T> expression);
+
+        // FIXME : Change this stupid Tuple type with a proper type that conveys the semantics behind those types.
+        Tuple<string, int> StopVerifySet<T>(T mockedObject, Action<T> expression);
     }
 }

@@ -4,6 +4,8 @@ namespace seesharp.moqingbirt
     using System.Linq;
     using System.Linq.Expressions;
 
+    using seesharp.moqingbirt.TestBench;
+
     public class Mock<T>
     {
         private readonly IMock mockImplementation;
@@ -89,38 +91,56 @@ namespace seesharp.moqingbirt
             }
         }
 
-        public void VerifySet<TResult>(Expression<Func<T, TResult>> expression, int expectedTimesCalled)
+        //public void VerifySet<TResult>(Expression<Func<T, TResult>> expression, int expectedTimesCalled)
+        //{
+        //    var memberExpression = expression.Body as MemberExpression;
+        //    if (memberExpression == null)
+        //    {
+        //        throw new ArgumentException("passed expression is not a property", "expression");
+        //    }
+
+        //    string propertyName = memberExpression.Member.Name;
+
+        //    var c = Expression.Lambda(expression).Compile();
+        //    object specifiedValue = c.DynamicInvoke();
+
+
+        //    var callsToSetter = this.mockImplementation.PropertySetCalls.Where(o => o.Item1 == propertyName && o.Item2 == specifiedValue);
+        //    int actualCallsCount = callsToSetter.Count();
+
+        //    bool isMatching = actualCallsCount == expectedTimesCalled;
+        //    if (!isMatching)
+        //    {
+        //        throw new Exception(propertyName + " setter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
+        //    }
+        //}
+
+        public void VerifySet(Action<T> expression, int expectedCallsCount)
         {
-            var memberExpression = expression.Body as MemberExpression;
-            if (memberExpression == null)
-            {
-                throw new ArgumentException("passed expression is not a property", "expression");
-            }
+            this.mockImplementation.StartVerifySet(this.Object, expression);           
 
-            string propertyName = memberExpression.Member.Name;
+            var verificationDetail = this.mockImplementation.StopVerifySet(this.Object, expression);
 
-            var c = Expression.Lambda(expression).Compile();
-            object specifiedValue = c.DynamicInvoke();
-
-
-            var callsToSetter = this.mockImplementation.PropertySetCalls.Where(o => o.Item1 == propertyName && o.Item2 == specifiedValue);
-            int actualCallsCount = callsToSetter.Count();
-
-            bool isMatching = actualCallsCount == expectedTimesCalled;
+            int actualCallsCount = verificationDetail.Item2;
+            bool isMatching = actualCallsCount == expectedCallsCount;
             if (!isMatching)
             {
-                throw new Exception(propertyName + " setter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
+                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedCallsCount);
             }
         }
 
-        //public void VerifySet(Action<T> expression, int expectedCallsCount)
-        //{
-        //    VerifySet(this, expression, expectedCallsCount);
-        //}
+        public void VerifySet(Action<T> expression, Func<int, bool> expectedCallsCount)
+        {
+            this.mockImplementation.StartVerifySet(this.Object, expression);
 
-        //public void VerifySet(Mock<T> mock, Action<T> expression, int expectedCallsCount)
-        //{
-            
-        //}
+            var verificationDetail = this.mockImplementation.StopVerifySet(this.Object, expression);
+
+            int actualCallsCount = verificationDetail.Item2;
+            bool isMatching = expectedCallsCount(actualCallsCount);
+            if (!isMatching)
+            {
+                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedCallsCount);
+            }
+        }
     }
 }

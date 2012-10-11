@@ -103,8 +103,11 @@
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <None Include="Mocks.g.tt">
+      <TransformOnBuild>False</TransformOnBuild>
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Mocks.g.cs</LastGenOutput>
+      <Parameters>&lt;%3fxml version="1.0" encoding="utf-16"%3f&gt;
+&lt;ArrayOfParameterStorage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" /&gt;</Parameters>
     </None>
     <None Include="seesharp.moqingbirt.GenerateMockClassesTask.targets">
       <SubType>Designer</SubType>
@@ -112,12 +115,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Class1.cs" />
+    <Compile Include="It.cs" />
+    <Compile Include="MatchIt.cs" />
+    <Compile Include="Mock.cs" />
     <Compile Include="Mocks.g.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Mocks.g.tt</DependentUpon>
     </Compile>
-    <Compile Include="Mock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
