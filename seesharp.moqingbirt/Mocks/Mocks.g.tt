@@ -25,114 +25,187 @@ DbContext derived class you want to create pre-generated views for.
 <#@ output extension=".cs" #>
 <#@ assembly name="$(SolutionDir)seesharp.moqingbirt.TestBench\bin\Debug\seesharp.moqingbirt.TestBench.dll"#>
 <#@ import namespace="System.Reflection" #>
+<#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Xml" #>
 <#@ import namespace="System.Xml.Linq" #>
+<#@ import namespace="System.Linq" #>
+<#@ assembly name="System.Collections" #>
 <#@ assembly name="System.Core" #>
 <#@ assembly name="System.Data.Entity" #>
 <#@ assembly name="System.Data.Entity.Design" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
+<#@ assembly name="System.Linq" #>
 <#@ assembly name="EnvDTE" #>
 <#@ import namespace="EnvDTE" #>		
 <#	 
-		var v = System.Reflection.Assembly.LoadFile(@"D:\sources\Moqingbirt\seesharp.moqingbirt\seesharp.moqingbirt.TestBench\bin\Debug\seesharp.moqingbirt.TestBench.dll");
-		foreach(var type in v.ExportedTypes.Where(o => o.GetTypeInfo().IsInterface))
+		var absoluteDllPaths = new List<string>();
+		var serviceProvider = Host as IServiceProvider;
+		var dte = serviceProvider.GetService(typeof(DTE)) as DTE;
+		var projects = dte.Solution.Projects;//this.Host.ResolveParameterValue("-", "-", "projects").Split('|');
+		WriteLine("// Mocks generated for :");			
+
+		foreach(var project in projects)
 		{
-			WriteLine("namespace " + type.Namespace +".Mocks\r\n{");	
-			WriteLine("    using System;");	
-			WriteLine("    using System.Linq;");	
 			WriteLine(string.Empty);
-			WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", type.Name.TrimStart('I'), type.Name));
-			WriteLine("    {");	
-			foreach(var method in type.GetRuntimeMethods().Where(o=>!o.IsSpecialName))
+			string projectFullPath = string.Empty;
+			string outputFileName = string.Empty;
+			string outputPath = string.Empty;
+			var configManager = ((EnvDTE.Project)project)					
+					.ConfigurationManager;
+			if(configManager != null)
 			{
-				string typeName;
-				if(method.ReturnType == typeof(void))
-				{
-					typeName = "void";
-				}
-				else
-				{
-					typeName = method.ReturnType.FullName;					
-				}
-				Write(string.Format("        public {0} {1}(",  typeName , method.Name));	
-				var parameters = method.GetParameters();
-				foreach(var param in parameters)
-				{
-					Write(string.Format("{0} {1}", param.ParameterType.FullName, param.Name));	
-					
-				}
-				WriteLine(")");
+				var activeConfig = configManager.ActiveConfiguration;
+					 var msg = string.Empty;					 
 					 
-				WriteLine("        {");	
-				Write("            var callRecord = new Tuple<string, object[]>( \"" + method.Name + "\", new object[] { ");
-				if(parameters.Count() == 0)
+					 foreach (Property prop in ((EnvDTE.Project)project).Properties)
+					 {			
+						if(prop.Name == "FullPath")
+						{
+							projectFullPath= prop.Value.ToString();
+					 		WriteLine("// " + prop.Name + " = " + prop.Value);				
+						}
+						if(prop.Name == "OutputFileName")
+						{
+							outputFileName = prop.Value.ToString();
+					 		WriteLine("// " + prop.Name + " = " + prop.Value);				
+						}
+						var val = "null";
+						try
+						{
+						if(prop.Value != null) 
+							val = prop.Value.ToString();
+						}
+						catch
+						{
+						}			
+					 }
+					 					 
+					 foreach (Property prop in activeConfig.Properties)
+					 {		
+						if(prop.Name == "OutputPath")							   
+						{
+							outputPath = prop.Value.ToString();
+							WriteLine("// " + prop.Name + " = " + prop.Value);	
+						}
+					 	//msg += " \r\n//   " + prop.Name + " = " + prop.Value;				
+					 }
+					 //WriteLine(msg);
+					 var absoluteDllPath = Path.Combine(Path.Combine(projectFullPath, outputPath), outputFileName);
+					 absoluteDllPaths.Add(absoluteDllPath);
+					 WriteLine("// --> " + absoluteDllPath);
+			}
+		}
+		// var resolvedprojects = this.Host.ResolveParameterValue("-", "-", "projects").Split('|');
+		// foreach(var project in resolvedprojects)
+		// {
+		// 	var yay = dte.Solution.FullName  ;
+		// 
+		// 	WriteLine("//" + yay.ToString());
+		// 	WriteLine("//" + this.Host.ResolvePath("..\\" +  project  )  );
+		// }
+
+		var v = System.Reflection.Assembly.LoadFile(absoluteDllPaths.ElementAt(2));
+		foreach(var dllPath in absoluteDllPaths.Where(p => p.EndsWith("Mocks.dll")))
+		{
+			foreach(var type in v.ExportedTypes.Where(o => o.GetTypeInfo().IsInterface))
+			{
+				WriteLine("namespace " + type.Namespace +".Mocks\r\n{");	
+				WriteLine("    using System;");	
+				WriteLine("    using System.Linq;");	
+				WriteLine(string.Empty);			
+				WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", type.Name.TrimStart('I'), type.Name));
+				WriteLine("    {");	
+				foreach(var method in type.GetRuntimeMethods().Where(o=>!o.IsSpecialName))
 				{
-					Write("null");	
-				}
-				else
-				{
-					Write(parameters[0].Name);	
-					foreach(var param in parameters.Skip(1))
-					{					
-						Write(string.Format(", {0}", param.Name));	
+					string typeName;
+					if(method.ReturnType == typeof(void))
+					{
+						typeName = "void";
+					}
+					else
+					{
+						typeName = method.ReturnType.FullName;					
+					}
+					Write(string.Format("        public {0} {1}(",  typeName , method.Name));	
+					var parameters = method.GetParameters();
+					foreach(var param in parameters)
+					{
+						Write(string.Format("{0} {1}", param.ParameterType.FullName, param.Name));	
 					
 					}
+					WriteLine(")");
+					 
+					WriteLine("        {");	
+					Write("            var callRecord = new Tuple<string, object[]>( \"" + method.Name + "\", new object[] { ");
+					if(parameters.Count() == 0)
+					{
+						Write("null");	
+					}
+					else
+					{
+						Write(parameters[0].Name);	
+						foreach(var param in parameters.Skip(1))
+						{					
+							Write(string.Format(", {0}", param.Name));	
+					
+						}
+					}
+					WriteLine(" });");	
+					WriteLine("            this.Calls.Add(callRecord);");	
+					// within the body of the class.
+
+
+
+					// return value of the method 
+					if (method.ReturnType != typeof(void))
+					{
+						WriteLine("            return default("+ method.ReturnType.FullName +");");	
+					}
+					WriteLine("        }");					
+					WriteLine(string.Empty);					
+
+
 				}
-				WriteLine(" });");	
-				WriteLine("            this.Calls.Add(callRecord);");	
-				// within the body of the class.
-
-
-
-				// return value of the method 
-				if (method.ReturnType != typeof(void))
-				{
-					WriteLine("            return default("+ method.ReturnType.FullName +");");	
-				}
-				WriteLine("        }");					
-				WriteLine(string.Empty);					
-
-
-			}
 						
-			foreach(var property in type.GetRuntimeProperties())
-			{
-				WriteLine("        public " + property.PropertyType.FullName+ " " + property.Name);	
-				WriteLine("        { ");
+				foreach(var property in type.GetRuntimeProperties())
+				{
+					WriteLine("        public " + property.PropertyType.FullName+ " " + property.Name);	
+					WriteLine("        { ");
 				
-				// TODO : Record the calls
-				WriteLine("            get");					
-				WriteLine("            {");					
-				WriteLine("                this.PropertyGetCalls.Add(\""+ property.Name +"\");");				
-				WriteLine("                return ("+property.PropertyType.FullName+")this.Setups.Single(o => o.Item1 == \"" + property.Name + "\").Item3;");					
-				WriteLine("            }");					
+					// TODO : Record the calls
+					WriteLine("            get");					
+					WriteLine("            {");					
+					WriteLine("                this.PropertyGetCalls.Add(\""+ property.Name +"\");");				
+					WriteLine("                return ("+property.PropertyType.FullName+")this.Setups.Single(o => o.Item1 == \"" + property.Name + "\").Item3;");					
+					WriteLine("            }");					
 								
 				
-				// TODO : Record the calls
-				WriteLine("            set");					
-				WriteLine("            {");										
-				WriteLine("                if (!this.IsVerifySetInProgess)");				
-				WriteLine("                {");				
-				WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
-				WriteLine("                }");				
-				WriteLine("                else");				
-				WriteLine("                {");				
-				WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
-				WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+property.PropertyType.FullName+">.LastMatch != null ? MatchIt<"+property.PropertyType.FullName+">.LastMatch(value) : ("+property.PropertyType.FullName+")o.Item2 ==  value);");				
-				WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");				
-				WriteLine("                }");				
-				WriteLine("            }");				
+					// TODO : Record the calls
+					WriteLine("            set");					
+					WriteLine("            {");										
+					WriteLine("                if (!this.IsVerifySetInProgess)");				
+					WriteLine("                {");				
+					WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
+					WriteLine("                }");				
+					WriteLine("                else");				
+					WriteLine("                {");				
+					WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
+					WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+property.PropertyType.FullName+">.LastMatch != null ? MatchIt<"+property.PropertyType.FullName+">.LastMatch(value) : ("+property.PropertyType.FullName+")o.Item2 ==  value);");				
+					WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");				
+					WriteLine("                }");				
+					WriteLine("            }");				
 				
-				WriteLine("        }");	
+					WriteLine("        }");	
 
-			}
+				}
 
-			WriteLine("    }");	
-			WriteLine("}");	
-			WriteLine(string.Empty);
+				WriteLine("    }");	
+				WriteLine("}");	
+				WriteLine(string.Empty);
 
-		}		
+			}		
+		}
 #>

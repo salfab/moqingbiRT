@@ -6,10 +6,13 @@ using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
 namespace Specs
 {
+    using System.Reflection;
+
     using Mocks;
 
     using seesharp.moqingbirt;
     using seesharp.moqingbirt.TestBench;
+    using System.Composition.Hosting;
 
     [TestClass]
     public class UnitTest1
@@ -37,6 +40,7 @@ namespace Specs
             mock.Object.IsAvailable = true;
             mock.VerifySet(o => o.IsAvailable = false, Times.Once());
             mock.VerifySet(o => o.IsAvailable = false, Times.AtLeast(0));
+            mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
         }
     }

@@ -1,8 +1,6 @@
-namespace Mocks
+namespace seesharp.moqingbirt
 {
     using System;
-
-    using seesharp.moqingbirt;
 
     public class It
     {

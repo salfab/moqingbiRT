@@ -43,6 +43,7 @@ namespace seesharp.moqingbirt
         {
             int lastVerifySetMatchesCount = this.LastVerifySetMatchesCount;
 
+            MatchIt<T>.LastMatch = null;
             this.IsVerifySetInProgess = false;
 
             return new Tuple<string, int>(LastVerifySetPropertyName, lastVerifySetMatchesCount);
