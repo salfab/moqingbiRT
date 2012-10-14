@@ -15,8 +15,7 @@ namespace seesharp.moqingbirt
 
                     // always match.
                     MatchIt<T>.LastMatch = x =>
-                    {
-                        MatchIt<T>.LastMatch = null;
+                    {                        
                         return true;
                     };
 

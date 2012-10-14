@@ -194,7 +194,8 @@ DbContext derived class you want to create pre-generated views for.
 					WriteLine("                {");				
 					WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
 					WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+property.PropertyType.FullName+">.LastMatch != null ? MatchIt<"+property.PropertyType.FullName+">.LastMatch(value) : ("+property.PropertyType.FullName+")o.Item2 ==  value);");				
-					WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");				
+					WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");		
+					WriteLine("                    MatchIt<"+ property.PropertyType.FullName +">.LastMatch = null;");				
 					WriteLine("                }");				
 					WriteLine("            }");				
 				
