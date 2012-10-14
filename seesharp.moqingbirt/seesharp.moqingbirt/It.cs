@@ -10,11 +10,15 @@ namespace seesharp.moqingbirt
                 {
                     if (MatchIt<T>.LastMatch != null)
                     {
-                        throw new InvalidOperationException("There is already a matching pending (It.Is<T>() or It.IsAny<T>89. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
+                        throw new InvalidOperationException("There is already a matching pending (It.Is<T>() or It.IsAny<T>(). There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
                     }
 
                     // always match.
-                    MatchIt<T>.LastMatch = x => true;
+                    MatchIt<T>.LastMatch = x =>
+                    {
+                        MatchIt<T>.LastMatch = null;
+                        return true;
+                    };
 
                     return default(T);
                 });

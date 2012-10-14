@@ -137,7 +137,8 @@ namespace seesharp.moqingbirt
             bool isMatching = expectedTimesCalled.MatchTimes(actualCallsCount);
             if (!isMatching)
             {
-                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
+                var timesSpelling = actualCallsCount > 1 ? " times" : " time";
+                throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + timesSpelling + ". Expected was " + expectedTimesCalled);
             }
         }
     }

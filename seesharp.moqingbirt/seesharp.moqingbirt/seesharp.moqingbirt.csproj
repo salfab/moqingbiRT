@@ -103,7 +103,6 @@
   <ItemGroup>
     <Compile Include="It.cs" />
     <Compile Include="MatchIt.cs" />
-    <Compile Include="Mock.cs" />
     <Compile Include="Setup.cs" />
     <Compile Include="IMock.cs" />
     <Compile Include="MockBase.cs" />
