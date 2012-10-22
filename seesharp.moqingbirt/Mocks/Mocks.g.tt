@@ -55,6 +55,64 @@ DbContext derived class you want to create pre-generated views for.
 			string outputPath = string.Empty;
 			var configManager = ((EnvDTE.Project)project)					
 					.ConfigurationManager;
+			foreach(ProjectItem pi in ((EnvDTE.Project)project).ProjectItems)
+			{
+				WriteLine("// project item name : " + pi.Name);
+				if (pi.FileCodeModel != null)
+				{
+					foreach(CodeElement item in pi.FileCodeModel.CodeElements)
+					{
+						if(item.Kind.ToString() == "vsCMElementNamespace")
+						{
+							foreach(CodeElement ce in ((CodeNamespace)item).Members)
+							{
+								var ce2 = ce as CodeInterface;
+								if(ce2 != null)
+								{
+									WriteLine("//     Interface name : " + ce2.Name);
+									foreach(CodeElement interfaceMember in ce2.Members)
+									{
+										// WriteLine("//         member of interface: " + interfaceMember.Kind);			
+										// WriteLine("//         member of interface: " + interfaceMember.Name);										
+										if(interfaceMember.Kind.ToString() == "vsCMElementProperty")							
+										{
+											var prop = (CodeProperty)interfaceMember;
+											WriteLine("//         Property : " + prop.Name);										
+											WriteLine("//         Property Type : " + prop.Type);										
+											WriteLine("//         Property : " + prop.Access);										
+											// WriteLine("//         Property : " + prop.Comment);										
+											// WriteLine("//         Property : " + prop.Attributes);										
+											// WriteLine("//         Property : " + prop.Getter);										
+											// WriteLine("//         Property : " + prop.Setter);										
+											
+										}
+										if(interfaceMember.Kind.ToString() == "vsCMElementFunction")							
+										{
+											var prop = (CodeFunction)interfaceMember;
+											WriteLine("//         Function : " + prop.Name);	
+											WriteLine("//         Function : " + prop.Type);	
+											WriteLine("//         Function : " + prop.Access);	
+											WriteLine("//         Function OL : " + prop.Overloads);	
+											WriteLine("//         Function args : " + prop.Parameters);	
+										}
+									}
+								}
+								// var ce3 = ce as CodeClass;
+								// if(ce3 != null)
+								// {
+								// 	WriteLine("// member Class : " + ce3.Name);							
+								// }
+								// else
+								// {
+								// 	WriteLine("// member Class : " + ce.Kind);
+								// }
+							}
+						}
+						// WriteLine("// NameSpace : " + ((CodeNamespace)item).Name);
+
+					}
+				}
+			}
 			if(configManager != null)
 			{
 				var activeConfig = configManager.ActiveConfiguration;
