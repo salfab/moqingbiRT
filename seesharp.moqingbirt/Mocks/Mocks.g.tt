@@ -23,7 +23,6 @@ DbContext derived class you want to create pre-generated views for.
 */
 <#@ template debug="true" hostspecific="true" language="C#" #>
 <#@ output extension=".cs" #>
-<#@ assembly name="$(SolutionDir)seesharp.moqingbirt.TestBench\bin\Debug\seesharp.moqingbirt.TestBench.dll"#>
 <#@ import namespace="System.Reflection" #>
 <#@ import namespace="System.Collections.Generic" #>
 <#@ import namespace="System.IO" #>
@@ -39,7 +38,9 @@ DbContext derived class you want to create pre-generated views for.
 <#@ assembly name="System.Xml.Linq" #>
 <#@ assembly name="System.Linq" #>
 <#@ assembly name="EnvDTE" #>
+<#@ assembly name="EnvDTE80" #>
 <#@ import namespace="EnvDTE" #>		
+<#@ import namespace="EnvDTE80" #>	
 <#	 
 		var absoluteDllPaths = new List<string>();
 		var serviceProvider = Host as IServiceProvider;
@@ -55,64 +56,8 @@ DbContext derived class you want to create pre-generated views for.
 			string outputPath = string.Empty;
 			var configManager = ((EnvDTE.Project)project)					
 					.ConfigurationManager;
-			foreach(ProjectItem pi in ((EnvDTE.Project)project).ProjectItems)
-			{
-				WriteLine("// project item name : " + pi.Name);
-				if (pi.FileCodeModel != null)
-				{
-					foreach(CodeElement item in pi.FileCodeModel.CodeElements)
-					{
-						if(item.Kind.ToString() == "vsCMElementNamespace")
-						{
-							foreach(CodeElement ce in ((CodeNamespace)item).Members)
-							{
-								var ce2 = ce as CodeInterface;
-								if(ce2 != null)
-								{
-									WriteLine("//     Interface name : " + ce2.Name);
-									foreach(CodeElement interfaceMember in ce2.Members)
-									{
-										// WriteLine("//         member of interface: " + interfaceMember.Kind);			
-										// WriteLine("//         member of interface: " + interfaceMember.Name);										
-										if(interfaceMember.Kind.ToString() == "vsCMElementProperty")							
-										{
-											var prop = (CodeProperty)interfaceMember;
-											WriteLine("//         Property : " + prop.Name);										
-											WriteLine("//         Property Type : " + prop.Type);										
-											WriteLine("//         Property : " + prop.Access);										
-											// WriteLine("//         Property : " + prop.Comment);										
-											// WriteLine("//         Property : " + prop.Attributes);										
-											// WriteLine("//         Property : " + prop.Getter);										
-											// WriteLine("//         Property : " + prop.Setter);										
-											
-										}
-										if(interfaceMember.Kind.ToString() == "vsCMElementFunction")							
-										{
-											var prop = (CodeFunction)interfaceMember;
-											WriteLine("//         Function : " + prop.Name);	
-											WriteLine("//         Function : " + prop.Type);	
-											WriteLine("//         Function : " + prop.Access);	
-											WriteLine("//         Function OL : " + prop.Overloads);	
-											WriteLine("//         Function args : " + prop.Parameters);	
-										}
-									}
-								}
-								// var ce3 = ce as CodeClass;
-								// if(ce3 != null)
-								// {
-								// 	WriteLine("// member Class : " + ce3.Name);							
-								// }
-								// else
-								// {
-								// 	WriteLine("// member Class : " + ce.Kind);
-								// }
-							}
-						}
-						// WriteLine("// NameSpace : " + ((CodeNamespace)item).Name);
-
-					}
-				}
-			}
+			HandleProjectItems(((EnvDTE.Project)project).ProjectItems);
+			/*
 			if(configManager != null)
 			{
 				var activeConfig = configManager.ActiveConfiguration;
@@ -154,7 +99,7 @@ DbContext derived class you want to create pre-generated views for.
 					 var absoluteDllPath = Path.Combine(Path.Combine(projectFullPath, outputPath), outputFileName);
 					 absoluteDllPaths.Add(absoluteDllPath);
 					 WriteLine("// --> " + absoluteDllPath);
-			}
+			}*/
 		}
 		// var resolvedprojects = this.Host.ResolveParameterValue("-", "-", "projects").Split('|');
 		// foreach(var project in resolvedprojects)
@@ -164,7 +109,7 @@ DbContext derived class you want to create pre-generated views for.
 		// 	WriteLine("//" + yay.ToString());
 		// 	WriteLine("//" + this.Host.ResolvePath("..\\" +  project  )  );
 		// }
-
+		/*
 		var v = System.Reflection.Assembly.LoadFile(absoluteDllPaths.ElementAt(2));
 		foreach(var dllPath in absoluteDllPaths.Where(p => p.EndsWith("Mocks.dll")))
 		{
@@ -266,5 +211,196 @@ DbContext derived class you want to create pre-generated views for.
 				WriteLine(string.Empty);
 
 			}		
-		}
+		}*/
+#>
+<#+
+    private void HandleProjectItems(ProjectItems projectItems)
+    {
+        foreach(ProjectItem pi in projectItems)
+			{
+				// Pay attention to the interface ISpecifiedServiceInOtherNamespace : it is in a sub-namespace : do we resolve it ?
+				WriteLine("// project item name : " + pi.Name);
+				if(pi.ProjectItems != null)
+				{
+					// WriteLine("// project item's Project Items : " + pi.ProjectItems);
+					HandleProjectItems(pi.ProjectItems);
+				}
+				if (pi.FileCodeModel != null)
+				{
+					foreach(CodeElement item in pi.FileCodeModel.CodeElements)
+					{
+						if(item.Kind.ToString() == "vsCMElementNamespace" && ((CodeNamespace)item).Name != "seesharp.moqingbirt")
+						{
+							foreach(CodeElement ce in ((CodeNamespace)item).Members)
+							{
+								var ce2 = ce as CodeInterface;
+								if(ce2 != null)
+								{
+									WriteLine("//     Interface name : " + ce2.Name);
+									WriteLine("namespace " + ((CodeNamespace)item).Name +".Mocks\r\n{");	
+									WriteLine("    using System;");	
+									WriteLine("    using System.Linq;");	
+									WriteLine(string.Empty);			
+									WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", ce2.Name.TrimStart('I'), ce2.Name));
+									WriteLine("    {");	
+
+									foreach(CodeElement interfaceMember in ce2.Members)
+									{
+										// WriteLine("//         member of interface: " + interfaceMember.Kind);			
+										// WriteLine("//         member of interface: " + interfaceMember.Name);										
+										if(interfaceMember.Kind.ToString() == "vsCMElementProperty")							
+										{
+											var property = (CodeProperty)interfaceMember;
+											WriteLine("//         Property : " + property.Name);										
+											WriteLine("//         Property Type : " + ((CodeTypeRef)property.Type).AsString);
+											WriteLine("//         Property : " + property.Access);										
+											// WriteLine("//         Property : " + prop.Comment);										
+											// WriteLine("//         Property : " + prop.Attributes);										
+											// WriteLine("//         Property : " + prop.Getter);										
+											// WriteLine("//         Property : " + prop.Setter);
+											var propType = ((CodeTypeRef)property.Type).AsString;
+											WriteLine("        public " + propType + " " + property.Name);	
+											WriteLine("        { ");
+				
+											// TODO : Record the calls
+											WriteLine("            get");					
+											WriteLine("            {");					
+											WriteLine("                this.PropertyGetCalls.Add(\""+ property.Name +"\");");				
+											WriteLine("                return ("+propType+")this.Setups.Single(o => o.Item1 == \"" + property.Name + "\").Item3;");					
+											WriteLine("            }");					
+								
+				
+											// TODO : Record the calls
+											WriteLine("            set");					
+											WriteLine("            {");										
+											WriteLine("                if (!this.IsVerifySetInProgess)");				
+											WriteLine("                {");				
+											WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
+											WriteLine("                }");				
+											WriteLine("                else");				
+											WriteLine("                {");				
+											WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
+											WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+propType+">.LastMatch != null ? MatchIt<"+propType+">.LastMatch(value) : ("+propType+")o.Item2 ==  value);");				
+											WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");		
+											WriteLine("                    MatchIt<"+ propType +">.LastMatch = null;");				
+											WriteLine("                }");				
+											WriteLine("            }");				
+				
+											WriteLine("        }");											
+											
+										}
+										if(interfaceMember.Kind.ToString() == "vsCMElementFunction")							
+										{
+											var function = (CodeFunction2)interfaceMember;
+											var dotPosition = function.FullName.LastIndexOf('.');
+											var functionName = function.FullName.Substring(dotPosition+1);
+											WriteLine("//         Function : " + functionName);	
+											WriteLine("//         Function : " + function.Name);	
+											var returnType = ((CodeTypeRef)function.Type).AsString;
+											WriteLine("//         Function Type: " + ((CodeTypeRef)function.Type).AsString);
+												
+											// http://msdn.microsoft.com/en-US/library/envdte.vscmaccess(v=vs.80).aspx
+											WriteLine("//         Function : " + function.Access);	
+											WriteLine("//         Function IsGeneric : " + function.IsGeneric);	
+
+											// is it needed ?
+											WriteLine("//         Function OL : " + function.Overloads);
+												
+											//WriteLine("//         Function args : " + function.Parameters);	
+
+											string parms = string.Empty;
+
+											string typeName = returnType;
+											// if(returnType == typeof(void))
+											// {
+											// 	typeName = "void";
+											// }
+											// else
+											// {
+											// 	typeName = returnType;					
+											// }
+											Write(string.Format("        public {0} {1}(",  typeName , functionName));	
+											//var parameters = method.GetParameters();
+											bool isFirstIteration = true;
+											foreach (CodeParameter param in function.Parameters)
+											{					
+												var paramType = ((CodeTypeRef)param.Type).AsString;																									
+												//WriteLine("//             Function arg Type: " + ((CodeTypeRef)param.Type).AsString);	
+												//WriteLine("//             Function arg Name: " + param.Name);	
+												if(!isFirstIteration)
+												{
+													Write(", ");
+												}
+												Write(string.Format("{0} {1}", paramType, param.Name));	
+												isFirstIteration = false;
+											}
+		
+											WriteLine(")");
+					 
+											WriteLine("        {");	
+											Write("            var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", new object[] { ");
+											
+											var paramsCount = ((CodeElements)function.Parameters).Count;
+											if(paramsCount == 0)
+											{
+												Write("null");	
+											}
+											else
+											{
+												isFirstIteration = true;
+												foreach (CodeParameter param in function.Parameters)
+												{		
+													if(isFirstIteration == false)
+													{
+														Write(", ");
+													}		
+													//var paramType = ((CodeTypeRef)param.Type).AsString;																									
+													Write(param.Name);	
+													isFirstIteration = false;	
+												}
+												// Write("/* "+paramsCount+"  */");
+												// Write(function.Parameters.Item(0).ToString());	
+												// for (int i = 1; i < paramsCount; i++)
+												// {
+												// 	Write(string.Format(", {0}", function.Parameters.Item(i).Name));	              
+												// }									
+											}
+											WriteLine(" });");	
+											WriteLine("            this.Calls.Add(callRecord);");	
+											// within the body of the class.
+
+
+
+											// return value of the method 
+											if (typeName != "void")
+											{
+												WriteLine("            return default("+ typeName +");");	
+											}
+											WriteLine("        }");					
+											WriteLine(string.Empty);					
+
+
+										}
+									}
+									WriteLine("    }");	
+									WriteLine("}");	
+									WriteLine(string.Empty);
+								}
+								// var ce3 = ce as CodeClass;
+								// if(ce3 != null)
+								// {
+								// 	WriteLine("// member Class : " + ce3.Name);							
+								// }
+								// else
+								// {
+								// 	WriteLine("// member Class : " + ce.Kind);
+								// }
+							}
+						}
+						// WriteLine("// NameSpace : " + ((CodeNamespace)item).Name);
+
+					}
+				}
+			}
+    }
 #>
