@@ -110,6 +110,7 @@
   <ItemGroup>
     <Compile Include="MyInjectedService.cs" />
     <Compile Include="IMyInjectedService.cs" />
+    <Compile Include="NewNameSpace\IParentInterface.cs" />
     <Compile Include="NewNameSpace\ISpecifiedServiceInOtherNamespace.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
