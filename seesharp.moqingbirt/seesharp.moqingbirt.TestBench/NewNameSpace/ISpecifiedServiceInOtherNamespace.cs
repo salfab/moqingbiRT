@@ -2,7 +2,7 @@
 {
     using System.Globalization;
 
-    public interface ISpecifiedServiceInOtherNamespace
+    public interface ISpecifiedServiceInOtherNamespace : IParentInterface
     {
         string MyName { get; }
 
