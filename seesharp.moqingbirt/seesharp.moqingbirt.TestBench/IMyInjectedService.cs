@@ -1,5 +1,7 @@
 namespace seesharp.moqingbirt.TestBench
 {
+    using System;
+
     public interface IMyInjectedService
     {
         bool IsAvailable { get; set; }
@@ -7,5 +9,7 @@ namespace seesharp.moqingbirt.TestBench
         int ReturnAnInteger();
 
         void SetAnInteger(double myDouble);
+
+        Guid SetAnOtherInteger(double myDouble);
     }
 }

@@ -433,8 +433,8 @@ DbContext derived class you want to create pre-generated views for.
 				WriteLine(")");
 					 
 				WriteLine("        {");	
-				Write("            var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", new object[] { ");
-											
+
+				Write("            var args = new object[] { ");	
 				var paramsCount = ((CodeElements)function.Parameters).Count;
 				if(paramsCount == 0)
 				{
@@ -460,7 +460,9 @@ DbContext derived class you want to create pre-generated views for.
 					// 	Write(string.Format(", {0}", function.Parameters.Item(i).Name));	              
 					// }									
 				}
-				WriteLine(" });");	
+				WriteLine(" };");	
+				WriteLine("            var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", args);");
+															
 				WriteLine("            this.Calls.Add(callRecord);");	
 				// within the body of the class.
 
@@ -468,8 +470,8 @@ DbContext derived class you want to create pre-generated views for.
 
 				// return value of the method 
 				if (typeName != "void")
-				{
-					WriteLine("            return default("+ typeName +");");	
+				{					
+					WriteLine("            return ("+typeName+")this.Setups.Single(o => o.Item1 == \"" + functionName + "\" && o.Item2.SequenceEqual(args)).Item3;");		
 				}
 				WriteLine("        }");					
 				WriteLine(string.Empty);					

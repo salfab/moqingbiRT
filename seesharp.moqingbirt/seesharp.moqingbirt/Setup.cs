@@ -1,6 +1,7 @@
 ﻿namespace seesharp.moqingbirt
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
     using System.Reflection;
@@ -39,9 +40,19 @@
             else
             {
                 var methodName = methodCallExpression.Method.Name;
-                var arguments = this.expression.Parameters.ToArray();
+                var arguments = methodCallExpression.Arguments.ToArray();
 
-                var configEntry = new Tuple<string, object[], object>(methodName, arguments, returnValue);
+                var evaluatedArgs = arguments.Select(
+                    arg =>
+                        {
+                            var c = Expression.Lambda(arg).Compile();
+                            var specifiedValue = c.DynamicInvoke();
+                            return specifiedValue;
+                        });
+
+
+                // FIXME : use IEnumerable instead of arrays if arrays are not needed.
+                var configEntry = new Tuple<string, object[], object>(methodName, evaluatedArgs.ToArray(), returnValue);
                 this.mockedObject.Setups.Add(configEntry);
             }
 

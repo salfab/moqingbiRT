@@ -18,5 +18,10 @@ namespace seesharp.moqingbirt.TestBench
         public void SetAnInteger(double myDouble)
         {            
         }
+
+        public Guid SetAnOtherInteger(double myDouble)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

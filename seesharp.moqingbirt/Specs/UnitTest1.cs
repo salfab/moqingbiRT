@@ -43,5 +43,29 @@ namespace Specs
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
         }
+        [TestMethod]
+        public void TestMethodsWithIsAny()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(It.IsAny<double>()))
+                .Returns(returnValue);
+            
+            Assert.AreSame(returnValue, mock.Object.SetAnOtherInteger(5.0));
+        }
+
+        [TestMethod]
+        public void TestMethodsWithDouble()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValue);
+
+            Guid anOtherInteger = mock.Object.SetAnOtherInteger(5.0);
+            Assert.AreEqual(returnValue, anOtherInteger);
+        }
     }
 }
