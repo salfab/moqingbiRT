@@ -6,9 +6,9 @@ using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
 
 namespace Specs
 {
+    using System.Diagnostics;
+    using System.IO;
     using System.Reflection;
-
-    using Mocks;
 
     using seesharp.moqingbirt;
     using seesharp.moqingbirt.TestBench;
@@ -18,8 +18,9 @@ namespace Specs
     public class UnitTest1
     {
         [TestMethod]
-        public void TestMethod1()
+        public void TestProperties()
         {
+            var t = typeof(List<string>);
             var mock = new Mock<IMyInjectedService>();
             mock.Setup(o => o.IsAvailable).Returns(true);
             Assert.IsTrue(mock.Object.IsAvailable);
@@ -40,9 +41,32 @@ namespace Specs
             mock.Object.IsAvailable = true;
             mock.VerifySet(o => o.IsAvailable = false, Times.Once());
             mock.VerifySet(o => o.IsAvailable = false, Times.AtLeast(0));
+            mock.VerifySet(o => o.IsAvailable = true, Times.Exactly(1));
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
             mock.VerifySet(o => o.IsAvailable = It.IsAny<bool>(), Times.Exactly(2));
         }
+
+        [TestMethod]
+        public void TestVerifySet()
+        {
+            var t = typeof(List<string>);
+            var mock = new Mock<IMyInjectedService>();
+            mock.SetupSet(o => o.IsAvailable = false);
+           
+            mock.Object.IsAvailable = false;
+            try
+            {
+                mock.Object.IsAvailable = true;
+            }
+            catch (Exception)
+            {
+                // ok !
+                throw;
+            }
+            Assert.Fail("We must not ignore the fact that SetupSet is only configured for value 'false'.");
+            //mock.VerifySet(o => o.IsAvailable = true, Times.Exactly(1));
+        }
+
         [TestMethod]
         public void TestMethodsWithIsAny()
         {

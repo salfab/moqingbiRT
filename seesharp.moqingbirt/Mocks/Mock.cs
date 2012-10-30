@@ -141,5 +141,10 @@ namespace seesharp.moqingbirt
                 throw new Exception(verificationDetail.Item1 + " setter was called " + actualCallsCount + timesSpelling + ". Expected was " + expectedTimesCalled);
             }
         }
+
+        public Setup<T> SetupSet(Action<T> expression)
+        {
+            return new Setup<T>((IMock)this.Object, expression);
+        }
     }
 }

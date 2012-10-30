@@ -31,7 +31,7 @@ namespace seesharp.moqingbirt
         {
             if (IsVerifySetInProgess)
             {
-                throw new InvalidOperationException("There is already a verification pending. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
+                throw new InvalidOperationException("There is already a verification pending for a property set. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
             }
 
             this.IsVerifySetInProgess = true;

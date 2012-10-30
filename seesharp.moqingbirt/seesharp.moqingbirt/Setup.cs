@@ -52,7 +52,7 @@
 
 
                 // FIXME : use IEnumerable instead of arrays if arrays are not needed.
-                var configEntry = new Tuple<string, object[], object>(methodName, evaluatedArgs.ToArray(), returnValue);
+                var configEntry = new Tuple<string, object[], object>(methodName,/* evaluatedArgs.ToArray()*/ arguments , returnValue);
                 this.mockedObject.Setups.Add(configEntry);
             }
 
@@ -70,6 +70,11 @@
         {
             this.mockedObject = mockedObject;
             this.expression = expression;
-        }    
+        }
+
+        public Setup(IMock mockedObject, Action<T> expression)
+        {
+            this.mockedObject = mockedObject;
+        }
     }
 }
