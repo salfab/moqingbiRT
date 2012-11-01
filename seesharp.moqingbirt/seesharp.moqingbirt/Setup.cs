@@ -25,7 +25,7 @@
             {
                 var memberExpression = ((MemberExpression)this.expression.Body);
                 var propertyName = memberExpression.Member.Name;
-                var newReturnSetup = new Tuple<string, object[], object>(propertyName, null, returnValue);
+                var newReturnSetup = new Tuple<string, Func<object, bool>[], object>(propertyName, null, returnValue);
                 var conflictingSetups = this.mockedObject.Setups.Where(o => o.Item1 == propertyName);
 
                 var enumeration = conflictingSetups.ToArray();
@@ -38,22 +38,8 @@
                 this.mockedObject.Setups.Add(newReturnSetup);                
             }
             else
-            {
-                var methodName = methodCallExpression.Method.Name;
-                var arguments = methodCallExpression.Arguments.ToArray();
-
-                var evaluatedArgs = arguments.Select(
-                    arg =>
-                        {
-                            var c = Expression.Lambda(arg).Compile();
-                            var specifiedValue = c.DynamicInvoke();
-                            return specifiedValue;
-                        });
-
-
-                // FIXME : use IEnumerable instead of arrays if arrays are not needed.
-                var configEntry = new Tuple<string, object[], object>(methodName,/* evaluatedArgs.ToArray()*/ arguments , returnValue);
-                this.mockedObject.Setups.Add(configEntry);
+            {                  
+                this.mockedObject.ApplySetupReturns(this.expression);               
             }
 
             return this;

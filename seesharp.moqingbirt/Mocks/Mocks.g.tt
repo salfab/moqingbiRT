@@ -384,24 +384,24 @@ DbContext derived class you want to create pre-generated views for.
 				WriteLine("                if(this.IsVerifySetInProgess)");				
 				WriteLine("                {");				
 				WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
-				WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+propType+">.LastMatch != null ? MatchIt<"+propType+">.LastMatch(value) : ("+propType+")o.Item2 ==  value);");				
+				WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+propType+">.LastMatch.Any() ? MatchIt<"+propType+">.LastMatch.Single()(value) : ("+propType+")o.Item2 ==  value);");				
 				WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");		
-				WriteLine("                    MatchIt<"+ propType +">.LastMatch = null;");				
+				WriteLine("                    MatchIt<"+ propType +">.LastMatch.Clear();");				
 				WriteLine("                }");		
 				WriteLine(string.Empty);				
 				WriteLine("                // Maybe using an enum and a switch case instead of multiple if is better.");				
 				WriteLine("                if (this.IsApplySetupSetInProgess)");				
 				WriteLine("                {");				
 				WriteLine("                    Func<object, bool> predicate;");
-				WriteLine("                    if(MatchIt<"+propType+">.LastMatch == null)");
+				WriteLine("                    if(MatchIt<"+propType+">.LastMatch.Any())");
 				WriteLine("                    {");
-				WriteLine("                        predicate = valueToTest => ("+propType+")valueToTest == value;");
+				WriteLine("                        var lastMatch = MatchIt<"+propType+">.LastMatch.Single();");
+				WriteLine("                        predicate = o => lastMatch(("+propType+")o);");
+				WriteLine("                        MatchIt<"+propType+">.LastMatch.Clear();");
 				WriteLine("                    }");
 				WriteLine("                    else");
 				WriteLine("                    {");
-				WriteLine("                        var lastMatch = MatchIt<"+propType+">.LastMatch;");
-				WriteLine("                        predicate = o => lastMatch(("+propType+")o);");
-				WriteLine("                        MatchIt<"+propType+">.LastMatch = null;");
+				WriteLine("                        predicate = valueToTest => ("+propType+")valueToTest == value;");
 				WriteLine("                    }");
 				WriteLine("                    var setup = new Tuple<string, Func<object, bool>>(\""+property.Name+"\", predicate);");
 				WriteLine("                    this.SetupsPropertySet.Add(setup);");
@@ -489,9 +489,58 @@ DbContext derived class you want to create pre-generated views for.
 					// }									
 				}
 				WriteLine(" };");	
-				WriteLine("            var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", args);");
+				WriteLine("            if(this.IsApplySetupReturnsInProgess)");	
+				WriteLine("            {");	
+				int i = 0;
+				foreach (CodeParameter param in function.Parameters)
+				{		
+					var paramPredicateVariableName =  param.Name+"Predicate";
+					WriteLine("                Func<object, bool> "+paramPredicateVariableName+";");		
+					var paramType = ((CodeTypeRef)param.Type).AsString;			
+					WriteLine("                if(MatchIt<"+paramType+">.LastMatch.ElementAt("+i+") == null)");					
+					WriteLine("                {");									
+					WriteLine("                    var lastMatch = MatchIt<"+paramType+">.LastMatch.ElementAt("+i+");");									
+					WriteLine("                    "+paramPredicateVariableName+" = o => lastMatch(("+ paramType +")o);");									
+					WriteLine("                }");					
+					WriteLine("                else");					
+					WriteLine("                {");					
+					WriteLine("                    " + paramPredicateVariableName + " = o => (("+paramType+")o).Equals("+param.Name+");");																																			
+					WriteLine("                }");																																			
+					i++;
+				}			
+				if(paramsCount == 0)
+				{
+					WriteLine("                var predicates = new Func<object, bool>[0];");	
+				}
+				else
+				{
+					Write("                var predicates = new [] { ");
+					isFirstIteration = true;
+					foreach (CodeParameter param in function.Parameters)
+					{		
+						if(isFirstIteration == false)
+						{
+							Write(", ");
+						}		
+						//var paramType = ((CodeTypeRef)param.Type).AsString;																									
+						Write(param.Name +"Predicate");	
+						isFirstIteration = false;	
+					}
+					WriteLine(" };");
+				}
+				WriteLine("                var setupTuple = new Tuple<string, Func<object, bool>[], object>(\""+functionName+"\", predicates, null);");	
+				WriteLine("                this.Setups.Add(setupTuple);");	
+				if (typeName != "void")
+				{										
+			
+					WriteLine("                return default("+typeName+");");					
+				}
+				WriteLine("            }");	
+				WriteLine("            else");	
+				WriteLine("            {");	
+				WriteLine("                var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", args);");
 															
-				WriteLine("            this.Calls.Add(callRecord);");	
+				WriteLine("                this.Calls.Add(callRecord);");	
 				// within the body of the class.
 
 
@@ -499,10 +548,11 @@ DbContext derived class you want to create pre-generated views for.
 				// return value of the method 
 				if (typeName != "void")
 				{					
-					WriteLine("            return ("+typeName+")this.Setups.Single(o => o.Item1 == \"" + functionName + "\" && o.Item2.SequenceEqual(args)).Item3;");		
+					WriteLine("                return ("+typeName+")this.Setups.Single(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2)).Item3;");		
 				}
+				WriteLine("            }");	
 				WriteLine("        }");					
-				WriteLine(string.Empty);					
+				//WriteLine(string.Empty);					
 
 
 			}
