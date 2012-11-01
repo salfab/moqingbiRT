@@ -142,9 +142,10 @@ namespace seesharp.moqingbirt
             }
         }
 
-        public Setup<T> SetupSet(Action<T> expression)
+        public void SetupSet(Action<T> expression)
         {
-            return new Setup<T>((IMock)this.Object, expression);
+            var mockedObject = ((IMock)this.Object);
+            mockedObject.ApplySetupSet(expression);
         }
     }
 }

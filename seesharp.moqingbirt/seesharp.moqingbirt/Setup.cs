@@ -60,8 +60,10 @@
         }
     }
 
-    public class Setup<T>
+    public class Setup<T> : ISetup<T>
     {
+        private readonly Action<T> action;
+
         private readonly IMock mockedObject;
 
         private readonly Expression<Action<T>> expression;
@@ -70,11 +72,10 @@
         {
             this.mockedObject = mockedObject;
             this.expression = expression;
-        }
+        }    
+    }
 
-        public Setup(IMock mockedObject, Action<T> expression)
-        {
-            this.mockedObject = mockedObject;
-        }
+    public interface ISetup<T>
+    {
     }
 }

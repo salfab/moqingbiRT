@@ -250,8 +250,8 @@ DbContext derived class you want to create pre-generated views for.
 				
 					// TODO : Record the calls
 					WriteLine("            set");					
-					WriteLine("            {");										
-					WriteLine("                if (!this.IsVerifySetInProgess)");				
+					WriteLine("            {");											
+					WriteLine("                if (!this.IsVerifySetInProgess && !this.IsSetterArgumentEvaluationInProgess)");				
 					WriteLine("                {");				
 					WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
 					WriteLine("                }");				
@@ -261,6 +261,12 @@ DbContext derived class you want to create pre-generated views for.
 					WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+property.PropertyType.FullName+">.LastMatch != null ? MatchIt<"+property.PropertyType.FullName+">.LastMatch(value) : ("+property.PropertyType.FullName+")o.Item2 ==  value);");				
 					WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");		
 					WriteLine("                    MatchIt<"+ property.PropertyType.FullName +">.LastMatch = null;");				
+					WriteLine("                }");	 
+					WriteLine(string.Empty);				
+					WriteLine("                // Maybe using an enum and a switch case instead of multiple if is better.");				
+					WriteLine("                if (this.IsSetterArgumentEvaluationInProgess)");				
+					WriteLine("                {");				
+					WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
 					WriteLine("                }");				
 					WriteLine("            }");				
 				
@@ -367,17 +373,39 @@ DbContext derived class you want to create pre-generated views for.
 				// TODO : Record the calls
 				WriteLine("            set");					
 				WriteLine("            {");										
-				WriteLine("                if (!this.IsVerifySetInProgess)");				
-				WriteLine("                {");				
+				WriteLine("                if (!this.IsVerifySetInProgess && !this.IsApplySetupSetInProgess)");				
+				WriteLine("                {");						
+				WriteLine("                    if(!this.SetupsPropertySet.Any(o => o.Item1 == \"" + property.Name + "\" && o.Item2(value) == true))");						
+				WriteLine("                    {");						
+				WriteLine("                        throw new NotSupportedException(\"No setup has been found for property setter "+ property.Name +" = \" + value);");				
+				WriteLine("                    }");				
 				WriteLine("                    this.PropertySetCalls.Add(new Tuple<string, object>(\""+ property.Name +"\", value));");				
 				WriteLine("                }");				
-				WriteLine("                else");				
+				WriteLine("                if(this.IsVerifySetInProgess)");				
 				WriteLine("                {");				
 				WriteLine("                    // todo : make a single object containing the count AND the name of the method last verified.");				
 				WriteLine("                    this.LastVerifySetMatchesCount = this.PropertySetCalls.Count(o => o.Item1 == \"" + property.Name + "\" && MatchIt<"+propType+">.LastMatch != null ? MatchIt<"+propType+">.LastMatch(value) : ("+propType+")o.Item2 ==  value);");				
 				WriteLine("                    this.LastVerifySetPropertyName = \"" + property.Name + "\";");		
 				WriteLine("                    MatchIt<"+ propType +">.LastMatch = null;");				
-				WriteLine("                }");				
+				WriteLine("                }");		
+				WriteLine(string.Empty);				
+				WriteLine("                // Maybe using an enum and a switch case instead of multiple if is better.");				
+				WriteLine("                if (this.IsApplySetupSetInProgess)");				
+				WriteLine("                {");				
+				WriteLine("                    Func<object, bool> predicate;");
+				WriteLine("                    if(MatchIt<"+propType+">.LastMatch == null)");
+				WriteLine("                    {");
+				WriteLine("                        predicate = valueToTest => ("+propType+")valueToTest == value;");
+				WriteLine("                    }");
+				WriteLine("                    else");
+				WriteLine("                    {");
+				WriteLine("                        var lastMatch = MatchIt<"+propType+">.LastMatch;");
+				WriteLine("                        predicate = o => lastMatch(("+propType+")o);");
+				WriteLine("                        MatchIt<"+propType+">.LastMatch = null;");
+				WriteLine("                    }");
+				WriteLine("                    var setup = new Tuple<string, Func<object, bool>>(\""+property.Name+"\", predicate);");
+				WriteLine("                    this.SetupsPropertySet.Add(setup);");
+				WriteLine("                }");								
 				WriteLine("            }");				
 				
 				WriteLine("        }");											

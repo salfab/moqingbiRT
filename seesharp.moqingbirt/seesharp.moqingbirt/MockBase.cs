@@ -2,6 +2,7 @@ namespace seesharp.moqingbirt
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public abstract class MockBase : IMock
     {
@@ -10,6 +11,7 @@ namespace seesharp.moqingbirt
             this.Calls = new List<Tuple<string, object[]>>();
             this.PropertyGetCalls = new List<string>();
             this.PropertySetCalls = new List<Tuple<string, object>>();
+            this.SetupsPropertySet = new List<Tuple<string, Func<object, bool>>>();
             this.Setups = new List<Tuple<string, object[], object>>();
         }
 
@@ -22,6 +24,8 @@ namespace seesharp.moqingbirt
         public List<Tuple<string, object[]>> Calls { get; private set; }
 
         public List<Tuple<string, object[], object>> Setups { get; private set; }
+
+        public List<Tuple<string, Func<object, bool>>> SetupsPropertySet { get; private set; }
 
         protected int LastVerifySetMatchesCount { get; set; }
         
@@ -49,5 +53,29 @@ namespace seesharp.moqingbirt
             return new Tuple<string, int>(LastVerifySetPropertyName, lastVerifySetMatchesCount);
         }
 
+        public void ApplySetupSet<T>(Action<T> expression)
+        {
+            if (this.IsApplySetupSetInProgess)
+            {
+                throw new InvalidOperationException("There is already an evaluation of the arguments pending for a property set. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
+            }
+
+            this.IsApplySetupSetInProgess = true;
+
+            // var setupCounts = this.SetupsPropertySet.Count;
+            expression.DynamicInvoke(new object[] {this});
+            //var newSetupCounts = this.SetupsPropertySet.Count;
+
+            //if (newSetupCounts - setupCounts != 1)
+            //{
+            //    throw new InvalidOperationException("It seems that calling ApplySetupGet did in fact create more than one setup. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
+            //}
+
+            this.IsApplySetupSetInProgess = false;
+
+            //return new SetupSet<T>(this.SetupsPropertySet.Last());
+        }
+
+        protected bool IsApplySetupSetInProgess { get; set; }
     }
 }
