@@ -31,6 +31,6 @@ namespace seesharp.moqingbirt
 
         void ApplySetupSet<T>(Action<T> expression);
 
-        void ApplySetupReturns<T, TReturn>(Expression<Func<T, TReturn>> expression);
+        void ApplySetupReturns<T, TReturn>(Expression<Func<T, TReturn>> expression, TReturn returnValue);
     }
 }

@@ -23,5 +23,10 @@ namespace seesharp.moqingbirt.TestBench
         {
             throw new NotImplementedException();
         }
+
+        public Guid PassTwoDoubles(double param1, double param2)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

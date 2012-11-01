@@ -11,5 +11,7 @@ namespace seesharp.moqingbirt.TestBench
         void SetAnInteger(double myDouble);
 
         Guid SetAnOtherInteger(double myDouble);
+
+        Guid PassTwoDoubles(double param1, double param2);
     }
 }

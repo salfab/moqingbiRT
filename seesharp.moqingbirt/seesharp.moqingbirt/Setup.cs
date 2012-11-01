@@ -39,7 +39,7 @@
             }
             else
             {                  
-                this.mockedObject.ApplySetupReturns(this.expression);               
+                this.mockedObject.ApplySetupReturns(this.expression, returnValue);               
             }
 
             return this;

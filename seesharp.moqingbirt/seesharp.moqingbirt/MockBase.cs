@@ -49,7 +49,7 @@ namespace seesharp.moqingbirt
         {
             int lastVerifySetMatchesCount = this.LastVerifySetMatchesCount;
 
-            MatchIt<T>.LastMatch.Clear();
+            MatchIt.LastMatch.Clear();
             this.IsVerifySetInProgess = false;
 
             return new Tuple<string, int>(LastVerifySetPropertyName, lastVerifySetMatchesCount);
@@ -65,7 +65,9 @@ namespace seesharp.moqingbirt
             this.IsApplySetupSetInProgess = true;
 
             // var setupCounts = this.SetupsPropertySet.Count;
+            MatchIt.RecordMatches = true;
             expression.DynamicInvoke(new object[] {this});
+            MatchIt.RecordMatches = false;
             //var newSetupCounts = this.SetupsPropertySet.Count;
 
             //if (newSetupCounts - setupCounts != 1)
@@ -73,12 +75,14 @@ namespace seesharp.moqingbirt
             //    throw new InvalidOperationException("It seems that calling ApplySetupGet did in fact create more than one setup. There might be a bug in Moqingbirt. Were you using multithreading by any chance ?");
             //}
 
+            MatchIt.LastMatch.Clear();
+
             this.IsApplySetupSetInProgess = false;
 
             //return new SetupSet<T>(this.SetupsPropertySet.Last());
         }
 
-        public void ApplySetupReturns<T, TReturn>(Expression<Func<T, TReturn>> expression)
+        public void ApplySetupReturns<T, TReturn>(Expression<Func<T, TReturn>> expression, TReturn returnValue)
         {
             // we already know we're not null here. courtesy of the caller.
             var methodCallExpression = expression.Body as MethodCallExpression;
@@ -93,10 +97,21 @@ namespace seesharp.moqingbirt
 
             this.IsApplySetupReturnsInProgess = true;
 
+            // build a list of predicated of all the available parameters.
+            MatchIt.RecordMatches = true;
             foreach (var argument in arguments)
             {
-                
+                var recordedMatches = MatchIt.LastMatch.Count;
+                var compiledArgument = Expression.Lambda(argument).Compile();
+                var specifiedValue = compiledArgument.DynamicInvoke();
+                if (recordedMatches == MatchIt.LastMatch.Count)
+                {
+                    // Nothing has been added in MatchIt by It.IsAny or It.Is : It was not a predicate, but a real value : handle accordingly.
+                    MatchIt.LastMatch.Add(o => o.Equals(specifiedValue));
+                }
+
             }
+            MatchIt.RecordMatches = false;
 
             //IEnumerable<Func<object, bool>> evaluatedArgs = arguments.ForEach()
             //    arg =>
@@ -107,16 +122,28 @@ namespace seesharp.moqingbirt
             //            //return specifiedValue;
             //        });
 
+            var oldSetups = this.Setups.ToArray();
 
             var c = expression.Compile();
-            var specifiedValue = c.DynamicInvoke(new object[] { this });
+            c.DynamicInvoke(new object[] { this });
+
+            var addedSetups = this.Setups.Except(oldSetups);
+
+            var addedSetup = addedSetups.Single();
+
+            // addedSetup.Item3 = returnValue;
+
+            // FIXME : replace this dodgy implementation with a proper class which is not immutable.
+            var setupWithReturnValue = new Tuple<string, Func<object, bool>[], object>(addedSetup.Item1, addedSetup.Item2, returnValue);
+            Setups.Remove(addedSetup);
+            Setups.Add(setupWithReturnValue);
 
             //var evargs = evaluatedArgs.ToArray();
 
             // FIXME : use IEnumerable instead of arrays if arrays are not needed.
             //var configEntry = new Tuple<string, Func<object, bool>[], object>(methodName,/* evaluatedArgs.ToArray()*/ evargs, returnValue);
             //this.Setups.Add(configEntry);
-
+            MatchIt.LastMatch.Clear();
             this.IsApplySetupReturnsInProgess = false;
         }
 
