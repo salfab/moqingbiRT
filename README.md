@@ -7,6 +7,10 @@ As of now, the ball just started rolling, and there isn't much to see just yet, 
 
 + Status as of now is Proof Of Concept
 
+Homepage
+--------
+http://www.seesharp.ch/moqingbirt
+
 how can I contribute ?
 ----------------------
 + If you think the official page is lame and you are great at webdesign : you can contribute by giving the website a fresh face.
