@@ -1,6 +1,7 @@
 namespace seesharp.moqingbirt
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Linq.Expressions;
 
@@ -42,15 +43,33 @@ namespace seesharp.moqingbirt
             var methodName = ((MethodCallExpression)expression.Body).Method.Name;
             var arguments = ((MethodCallExpression)expression.Body).Arguments;
 
-            var argumentsValues = arguments.Select(
+            MatchIt.RecordMatches = true;
+            var evaluatedValues = arguments.Select(
                 a =>
                     {
                         var c = Expression.Lambda(a).Compile();
                         var value = c.DynamicInvoke();
                         return value;
-                    });
+                    }).ToArray();
 
-            var callsToMethod = this.mockImplementation.Calls.Where(o => o.Item1 == methodName && o.Item2.SequenceEqual(argumentsValues));
+            MatchIt.RecordMatches = false;
+            var matchpredicates = MatchIt.LastMatch;
+            
+            var argumentPredicates = new Func<object, bool>[evaluatedValues.Length];
+            for (int i = 0; i < matchpredicates.Count; i++)
+            {
+                if (matchpredicates[i] == null)
+                {
+                    int currentIndex = i;
+                    argumentPredicates[i] = o => o.Equals(evaluatedValues[currentIndex]);
+                }
+                else
+                {
+                    argumentPredicates[i] = matchpredicates[i];
+                }
+            }
+
+            var callsToMethod = this.mockImplementation.Calls.Where(o => o.Item1 == methodName && this.PredicatesMatchCallArguments(argumentPredicates, o.Item2));
             int actualCallsCount = callsToMethod.Count();
             bool isMatching = actualCallsCount == expectedTimesCalled;
             if (!isMatching)
@@ -58,6 +77,20 @@ namespace seesharp.moqingbirt
                 throw new Exception(methodName + " was called " + actualCallsCount + " times. Expected was " + expectedTimesCalled);
             }
             return isMatching;
+        }
+
+        private bool PredicatesMatchCallArguments(Func<object,bool>[] argumentPredicates, object[] item2)
+        {
+            var allPredicatesPass = true;
+            for (int i = 0; i < item2.Length; i++)
+            {
+                if (argumentPredicates[i](item2[i]) == false)
+                {
+                    allPredicatesPass = false;
+                    i = item2.Length;
+                }
+            }
+            return allPredicatesPass;
         }
 
         public Setup<T, TReturn> Setup<TReturn>(Expression<Func<T, TReturn>> expression)
