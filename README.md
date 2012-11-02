@@ -9,7 +9,8 @@ As of now, the ball just started rolling, and there isn't much to see just yet, 
 
 Homepage
 --------
-http://www.seesharp.ch/moqingbirt
+http://www.seesharp.ch/moqingbirt (soon to be replaced by ...)
+http://salfab.github.com/moqingbiRT/
 
 how can I contribute ?
 ----------------------
