@@ -461,11 +461,7 @@ DbContext derived class you want to create pre-generated views for.
 
 				Write("            var args = new object[] { ");	
 				var paramsCount = ((CodeElements)function.Parameters).Count;
-				if(paramsCount == 0)
-				{
-					Write("null");	
-				}
-				else
+				if(paramsCount != 0)				
 				{
 					isFirstIteration = true;
 					foreach (CodeParameter param in function.Parameters)

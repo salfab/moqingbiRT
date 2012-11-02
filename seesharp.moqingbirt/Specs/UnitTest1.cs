@@ -107,6 +107,18 @@ namespace Specs
         }
 
         [TestMethod]
+        public void TestMethodsWithoutAnyParameter()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            const int returnValue = 5;
+            mock
+                .Setup(o => o.ReturnAnInteger())
+                .Returns(returnValue);
+
+            Assert.AreEqual(returnValue, mock.Object.ReturnAnInteger());
+        }
+
+        [TestMethod]
         public void TestMetodsVerifyCallsCount()
         {
             var mock = new Mock<IMyInjectedService>();
