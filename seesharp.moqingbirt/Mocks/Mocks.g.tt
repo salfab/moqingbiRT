@@ -533,11 +533,10 @@ DbContext derived class you want to create pre-generated views for.
 					WriteLine("                return default("+typeName+");");					
 				}
 				WriteLine("            }");	
-				WriteLine("            else");	
-				WriteLine("            {");	
-				WriteLine("                var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", args);");
+
+				WriteLine("            var callRecord = new Tuple<string, object[]>( \"" + functionName + "\", args);");
 															
-				WriteLine("                this.Calls.Add(callRecord);");	
+				WriteLine("            this.Calls.Add(callRecord);");	
 				// within the body of the class.
 
 
@@ -545,9 +544,14 @@ DbContext derived class you want to create pre-generated views for.
 				// return value of the method 
 				if (typeName != "void")
 				{					
-					WriteLine("                return ("+typeName+")this.Setups.Single(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2)).Item3;");		
+					WriteLine("            var returnValue = this.Setups.SingleOrDefault(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2));");		
+					WriteLine("            if(returnValue == null)");		
+					WriteLine("            {");		
+					WriteLine("                throw new MockException(\"No setup found for call to "+ functionName +"\");");
+					WriteLine("            }");		
+					WriteLine("            return ("+typeName+")returnValue.Item3;");		
 				}
-				WriteLine("            }");	
+
 				WriteLine("        }");					
 				//WriteLine(string.Empty);					
 

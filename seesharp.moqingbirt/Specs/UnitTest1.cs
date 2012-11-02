@@ -120,6 +120,56 @@ namespace Specs
             mock.Verify(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()),1);
         }
 
+        [TestMethod]
+        public void TestMetodsVerifyCallsCountWithItIsAnySetupOnly()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()))
+                .Returns(returnValue);
+
+            mock.Object.PassTwoDoubles(5.0, 10);
+
+            mock.Verify(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()), 1);
+        }
+
+        [TestMethod]
+        public void TestMetodsVerifyCallsCountWithItIsAnySetupOnlyAndScalarVerify()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()))
+                .Returns(returnValue);
+
+            mock.Object.PassTwoDoubles(5.0, 10);
+
+            mock.Verify(o => o.PassTwoDoubles(5.0, 10), 1);
+        }
+
+        [TestMethod]
+        public void TestMetodsCallNonSetupMethodThrowsMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()))
+                .Returns(returnValue);
+
+            try
+            {
+                mock.Object.ReturnAnInteger();
+            }
+            catch (MockException )
+            {
+                // Success  
+                return;
+            }
+            Assert.Fail("MockException was expected here");
+            // mock.Verify(o => o.PassTwoDoubles(5.0, 10), 0);
+        }
+
         // test all the combinations :
         // - with all It.IsAny,
         // - one It.IsAny, the other a regular one, 
