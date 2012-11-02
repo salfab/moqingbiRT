@@ -107,6 +107,29 @@ namespace Specs
         }
 
         [TestMethod]
+        public void TestMetodsVerifyCallsCount()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.PassTwoDoubles(5.0, It.IsAny<double>()))
+                .Returns(returnValue);
+
+            mock.Object.PassTwoDoubles(5.0, 10);
+
+            mock.Verify(o => o.PassTwoDoubles(It.IsAny<double>(), It.IsAny<double>()),1);
+        }
+
+        // test all the combinations :
+        // - with all It.IsAny,
+        // - one It.IsAny, the other a regular one, 
+        // - only one param, 
+        // - none, 
+        // - calling non-setup method,
+        // - calling setup method but with restrictive setup (setup with scalar value, not a predicate, and call with an other saclar value)
+        // - with restrictive setup for only one param out of 2
+
+        [TestMethod]
         public void TestMethodsWithDouble()
         {
             var mock = new Mock<IMyInjectedService>();
