@@ -311,11 +311,8 @@ DbContext derived class you want to create pre-generated views for.
 									WriteLine("    using seesharp.moqingbirt;");	
 									WriteLine("    using "+((CodeNamespace)item).Name +";");	
 									WriteLine(string.Empty);			
-									WriteLine(string.Format("    public class {0}Mock : MockBase, {1}", ce2.Name.TrimStart('I'), ce2.Name));
+									WriteLine(string.Format("    internal class {0}Mock : MockBase, {1}", ce2.Name.Substring(1), ce2.Name));
 									WriteLine("    {");	
-
-
-
 									// implement members of ce2
 									GenerateInterfaceMembers(ce2);
 									WriteLine("    }");	
