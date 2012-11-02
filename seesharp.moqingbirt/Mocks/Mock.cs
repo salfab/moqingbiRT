@@ -47,29 +47,23 @@ namespace seesharp.moqingbirt
             var evaluatedValues = arguments.Select(
                 a =>
                     {
+                        var matchesCount = MatchIt.LastMatch.Count;
                         var c = Expression.Lambda(a).Compile();
                         var value = c.DynamicInvoke();
+
+                        // no matches has been added, i.e. it is not com,ing from It.IsAny or It.Is ! it's a scalar value for which we need to build a predicate.
+                        if (matchesCount == MatchIt.LastMatch.Count)
+                        {
+                            MatchIt.LastMatch.Add(o => o.Equals(value));
+                        }
                         return value;
                     }).ToArray();
 
             MatchIt.RecordMatches = false;
-            var matchpredicates = MatchIt.LastMatch;
-            
-            var argumentPredicates = new Func<object, bool>[evaluatedValues.Length];
-            for (int i = 0; i < matchpredicates.Count; i++)
-            {
-                if (matchpredicates[i] == null)
-                {
-                    int currentIndex = i;
-                    argumentPredicates[i] = o => o.Equals(evaluatedValues[currentIndex]);
-                }
-                else
-                {
-                    argumentPredicates[i] = matchpredicates[i];
-                }
-            }
+            var matchpredicates = MatchIt.LastMatch.ToArray();
+            MatchIt.LastMatch.Clear();
 
-            var callsToMethod = this.mockImplementation.Calls.Where(o => o.Item1 == methodName && this.PredicatesMatchCallArguments(argumentPredicates, o.Item2));
+            var callsToMethod = this.mockImplementation.Calls.Where(o => o.Item1 == methodName && this.PredicatesMatchCallArguments(matchpredicates, o.Item2));
             int actualCallsCount = callsToMethod.Count();
             bool isMatching = actualCallsCount == expectedTimesCalled;
             if (!isMatching)
