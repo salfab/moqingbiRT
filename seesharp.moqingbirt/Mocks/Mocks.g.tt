@@ -363,7 +363,12 @@ DbContext derived class you want to create pre-generated views for.
 				WriteLine("            get");					
 				WriteLine("            {");					
 				WriteLine("                this.PropertyGetCalls.Add(\""+ property.Name +"\");");				
-				WriteLine("                return ("+propType+")this.Setups.Single(o => o.Item1 == \"" + property.Name + "\").Item3;");					
+				WriteLine("                var setup = this.Setups.SingleOrDefault(o => o.Item1 == \"" + property.Name + "\");");					
+				WriteLine("                if(setup == null)");					
+				WriteLine("                {");					
+				WriteLine("                    throw new MockException(\"No setup exists for property "+ ce2.Name +"." + property.Name  + " getter accessor.\");");					
+				WriteLine("                }");					
+				WriteLine("                return ("+propType+")setup.Item3;");					
 				WriteLine("            }");					
 								
 				
@@ -543,7 +548,7 @@ DbContext derived class you want to create pre-generated views for.
 					WriteLine("            var returnValue = this.Setups.SingleOrDefault(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2));");		
 					WriteLine("            if(returnValue == null)");		
 					WriteLine("            {");		
-					WriteLine("                throw new MockException(\"No setup found for call to "+ functionName +"\");");
+					WriteLine("                throw new MockException(\"No setup found for call to "+ ce2.Name +"."+ functionName +"\");");
 					WriteLine("            }");		
 					WriteLine("            return ("+typeName+")returnValue.Item3;");		
 				}
