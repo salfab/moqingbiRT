@@ -83,6 +83,29 @@ namespace Specs
         }
 
         [TestMethod]
+        public void TestGettingPropertyWithoutSetupThrowsMockException()
+        {
+            var t = typeof(List<string>);
+            var mock = new Mock<IMyInjectedService>();
+
+            try
+            {
+                var v = mock.Object.IsAvailable;
+            }
+            catch (MockException)
+            {                
+                // success
+                return;
+            }
+
+            Assert.Fail("We should have gotten a MockException by now.");
+        
+
+            // Assert.Fail("We must not ignore the fact that SetupSet is only configured for value 'false'.");
+            //mock.VerifySet(o => o.IsAvailable = true, Times.Exactly(1));
+        }
+
+        [TestMethod]
         public void TestMethodsWithIsAny()
         {
             var mock = new Mock<IMyInjectedService>();
@@ -204,6 +227,133 @@ namespace Specs
             Assert.AreEqual(returnValue, anOtherInteger);
         }
 
+
+        [TestMethod]
+        public void TestSameSetupTwiceThrowsMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValue);
+
+            try
+            {
+                mock
+                        .Setup(o => o.SetAnOtherInteger(5.0))
+                        .Returns(returnValue);
+            }
+            catch (MockException e)
+            {
+                // success
+                return;
+            }
+
+            Assert.Fail("A MockException should have been thrown for attempting to setup the same method with the same parameters twice.");
+        }
+
+        [TestMethod]
+        public void TestSameSetupTwiceWithDifferentReturnValueThrowsMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValue);
+
+            try
+            {
+                mock
+                        .Setup(o => o.SetAnOtherInteger(5.0))
+                        .Returns(Guid.NewGuid());
+            }
+            catch (MockException e)
+            {                
+                // success
+                return;
+            }
+
+            Assert.Fail("A MockException should have been thrown for attempting to setup the same method with the same parameters twice.");
+        }
+
+        [TestMethod]
+        public void TestSameMethodTwiceForDifferentParametersDoesNotThrowMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValue);
+
+            try
+            {
+                mock
+                        .Setup(o => o.SetAnOtherInteger(6.0))
+                        .Returns(Guid.NewGuid());
+            }
+            catch (MockException)
+            {
+                Assert.Fail("A MockException should not have been thrown for attempting to setup the same method twice, because the parameters were different.");
+                // success
+            }
+        }
+
+        [TestMethod]
+        public void TestSameMethodSetupTwiceForDifferentParametersReturnsTheRightValue()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValueFor5 = Guid.NewGuid();
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValueFor5);
+
+            Guid returnValueFor6 = Guid.NewGuid();
+            mock
+                    .Setup(o => o.SetAnOtherInteger(6.0))
+                    .Returns(returnValueFor6);
+            
+            Assert.AreEqual(returnValueFor5, mock.Object.SetAnOtherInteger(5.0));
+            Assert.AreEqual(returnValueFor6, mock.Object.SetAnOtherInteger(6.0));
+        }
+
+        [TestMethod]
+        public void TestCallParameterlessMethodWithoutPreviouslySettingItUpThrowsMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            
+            mock.Setup(o => o.ReturnAnInteger());
+
+            try
+            {
+                mock.Object.ReturnAnInteger();
+            }
+            catch (MockException)
+            {
+                // success
+                return;
+            }
+
+            Assert.Fail("A MockException should have been thrown for attempting to call a parameterless method without setting it up.");
+        }
+
+        [TestMethod]
+        public void TestCallParameterlessMethodWhichWasSetupDowsNotThrowMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+
+            mock.Setup(o => o.ReturnAnInteger());
+
+            try
+            {
+                mock.Object.ReturnAnInteger();
+            }
+            catch (MockException e)
+            {
+                // success
+                Assert.Fail("A MockException should not have been thrown because the method was previously setup.");
+            }
+
+        }
 
         //[TestMethod]
         //public void Test()
