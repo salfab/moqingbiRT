@@ -135,6 +135,7 @@ namespace seesharp.moqingbirt
 
             // FIXME : replace this dodgy implementation with a proper class which is not immutable.
             var setupWithReturnValue = new Tuple<string, Func<object, bool>[], object>(addedSetup.Item1, addedSetup.Item2, returnValue);
+
             Setups.Remove(addedSetup);
             Setups.Add(setupWithReturnValue);
 

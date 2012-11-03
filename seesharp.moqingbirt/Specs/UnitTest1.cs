@@ -229,51 +229,52 @@ namespace Specs
 
 
         [TestMethod]
-        public void TestSameSetupTwiceThrowsMockException()
+        public void TestCallingMethodWithSameSetupTwiceWithDifferentReturnValueHasReturnValueMatchingLastSetupReturns_ChangingSetupOrder()
+        {
+            var mock = new Mock<IMyInjectedService>();
+            Guid returnValue = Guid.NewGuid();
+            Guid lastGuid = Guid.NewGuid();
+
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(lastGuid);
+
+            mock
+                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Returns(returnValue);
+
+            Assert.AreEqual(returnValue, mock.Object.SetAnOtherInteger(5.0));
+        }
+        [TestMethod]
+        public void TestCallingMethodWithSameSetupTwiceWithDifferentReturnValueHasReturnValueMatchingLastSetupReturns()
         {
             var mock = new Mock<IMyInjectedService>();
             Guid returnValue = Guid.NewGuid();
             mock
                 .Setup(o => o.SetAnOtherInteger(5.0))
                 .Returns(returnValue);
-
-            try
-            {
-                mock
-                        .Setup(o => o.SetAnOtherInteger(5.0))
-                        .Returns(returnValue);
-            }
-            catch (MockException e)
-            {
-                // success
-                return;
-            }
-
-            Assert.Fail("A MockException should have been thrown for attempting to setup the same method with the same parameters twice.");
+            Guid lastGuid = Guid.NewGuid();
+            mock
+                      .Setup(o => o.SetAnOtherInteger(5.0))
+                      .Returns(lastGuid);
+            Assert.AreEqual(lastGuid, mock.Object.SetAnOtherInteger(5.0));
         }
 
         [TestMethod]
-        public void TestSameSetupTwiceWithDifferentReturnValueThrowsMockException()
+        public void TestCallingMethodWithTwoOverlappingSetupsHasReturnValueMatchingLastSetupReturns()
         {
             var mock = new Mock<IMyInjectedService>();
             Guid returnValue = Guid.NewGuid();
             mock
-                .Setup(o => o.SetAnOtherInteger(5.0))
+                .Setup(o => o.SetAnOtherInteger(It.IsAny<double>()))
                 .Returns(returnValue);
 
-            try
-            {
-                mock
-                        .Setup(o => o.SetAnOtherInteger(5.0))
-                        .Returns(Guid.NewGuid());
-            }
-            catch (MockException e)
-            {                
-                // success
-                return;
-            }
+            Guid lastGuid = Guid.NewGuid();
+            mock
+                      .Setup(o => o.SetAnOtherInteger(5.0))
+                      .Returns(lastGuid);
 
-            Assert.Fail("A MockException should have been thrown for attempting to setup the same method with the same parameters twice.");
+            Assert.AreEqual(lastGuid, mock.Object.SetAnOtherInteger(5.0));
         }
 
         [TestMethod]
@@ -337,7 +338,7 @@ namespace Specs
         }
 
         [TestMethod]
-        public void TestCallParameterlessMethodWhichWasSetupDowsNotThrowMockException()
+        public void TestCallMethodWhichWasSetupWithoutReturnThrowMockException()
         {
             var mock = new Mock<IMyInjectedService>();
 
@@ -350,6 +351,27 @@ namespace Specs
             catch (MockException e)
             {
                 // success
+                return;
+            }
+            Assert.Fail("A MockException should not have been thrown because the method was previously setup.");
+
+        }
+
+        [TestMethod]
+        public void TestCallParameterlessMethodWhichWasSetupDowsNotThrowMockException()
+        {
+            var mock = new Mock<IMyInjectedService>();
+
+            mock
+                .Setup(o => o.ReturnAnInteger())
+                .Returns(1);
+
+            try
+            {
+                mock.Object.ReturnAnInteger();
+            }
+            catch (MockException e)
+            {
                 Assert.Fail("A MockException should not have been thrown because the method was previously setup.");
             }
 

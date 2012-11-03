@@ -545,7 +545,7 @@ DbContext derived class you want to create pre-generated views for.
 				// return value of the method 
 				if (typeName != "void")
 				{					
-					WriteLine("            var returnValue = this.Setups.SingleOrDefault(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2));");		
+					WriteLine("            var returnValue = this.Setups.LastOrDefault(o => o.Item1 == \"" + functionName + "\" && this.AllArgumentsSatisfyPredicates(args, o.Item2));");		
 					WriteLine("            if(returnValue == null)");		
 					WriteLine("            {");		
 					WriteLine("                throw new MockException(\"No setup found for call to "+ ce2.Name +"."+ functionName +"\");");
